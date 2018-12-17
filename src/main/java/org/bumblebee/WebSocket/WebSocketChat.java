@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpSession;
 import javax.websocket.*;
+import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -20,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 再在 @OnOpen注解的方法里加入参EndpointConfig config
  * 通过config得到httpSession
  */
-@ServerEndpoint(value="/back/websocket" ,configurator=GetHttpSessionConfigurator.class)//得到httpSession
+@ServerEndpoint(value="/back/websocket/{roomId}" ,configurator=GetHttpSessionConfigurator.class)//得到httpSession
 @Component
 public class WebSocketChat {
     //容器
@@ -40,13 +41,29 @@ public class WebSocketChat {
     //想了想觉得没必要list也做线程安全，因为都是分别获取去拿List，增加删除比较多，改用LinkedList
     //因为获取当前数量时用get必须用线程安全，否则cpu100%会卡死
     //需要把对websocketroom的操作放到同一个类中，对这个类上锁,否则会出现多线程的脏数据
-    private static  ConcurrentHashMap<Integer, LinkedList<WebSocketChat>> webSocketRoom= new ConcurrentHashMap<>();
+    public static  ConcurrentHashMap<Integer, LinkedList<WebSocketChat>> webSocketRoom= new ConcurrentHashMap<>();
 
     //从http升级到websocket时从session中获取信息
     private Session session;
 
     //当前会话的httpession
     private HttpSession httpSession;
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Integer getRoomId() {
+        return roomId;
+    }
+
+    public void setRoomId(Integer roomId) {
+        this.roomId = roomId;
+    }
 
     //因为HttpSession生命周期，WebSocket是长连接，会出现用户名丢失的情况，因此将用户名保存到WebSocket对象中，这里暂时是不需要了
     //private String username;
@@ -61,7 +78,7 @@ public class WebSocketChat {
      * @param config   有
      */
     @OnOpen
-    public void onOpen(Session session, EndpointConfig config){
+    public void onOpen(Session session, EndpointConfig config, @PathParam("roomId") Integer getroomId){
         //得到httpSession
         this.httpSession = (HttpSession) config.getUserProperties()
                 .get(HttpSession.class.getName());
@@ -77,8 +94,8 @@ public class WebSocketChat {
             //新增的登陆冲突判断
             this.JudgeOnline(httpSession);
             this.user=(User) this.httpSession.getAttribute("user");//保存用户名
-            this.roomId = (Integer) this.httpSession.getAttribute("roomId");//保存房间id
-            this.changeOnline();//改变在线
+            this.roomId = getroomId;//保存房间id
+            //this.changeOnline();//改变在线
 
             //更新了map中对应的房间，连接 list
             //方法为线程锁
@@ -114,7 +131,7 @@ public class WebSocketChat {
     @OnClose
     public void onClose(){
 
-        this.changeOffline();//用户离线
+        //this.changeOffline();//用户离线
         remove_websocket(this.roomId);//删除用户
         LinkedList<WebSocketChat> list = webSocketRoom.get(roomId);
         //发送连接断开消息，调用获取在线用户方法
