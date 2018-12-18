@@ -18,13 +18,14 @@ public class SiginServiceImpl implements SiginService {
     @Resource
     private SigindetailMapper sigindetailMapper;
     @Override
-    public Integer createSigin(Integer userId, Integer roomId) {
+    public Sigin createSigin(Integer userId, Integer roomId) {
         Sigin sigin = new Sigin();
         sigin.setSiginUserId(userId);
         sigin.setSiginRoomId(roomId);
         sigin.setSiginDate(new Date());
+        sigin.setSiginState(1);
         siginMapper.insertSelective(sigin);
-        return sigin.getSiginId();
+        return sigin;
     }
 
     @Override
@@ -64,6 +65,27 @@ public class SiginServiceImpl implements SiginService {
         SiginExample example = new SiginExample();
         SiginExample.Criteria criteria = example.createCriteria();
         criteria.andSiginRoomIdEqualTo(roomId);
-        return siginMapper.selectExtendByExample(example);
+        return siginMapper.selectByExample(example);
+    }
+
+    @Override
+    public Integer sigin(Integer userId, Integer siginId) {
+        Sigindetail sigindetail = new Sigindetail();
+        sigindetail.setSdSiginId(siginId);
+        sigindetail.setSdUserId(userId);
+        sigindetailMapper.insertSelective(sigindetail);
+        return sigindetail.getSdId();
+    }
+
+    @Override
+    public Boolean haveSigin(Integer userId, Integer siginId) {
+        SigindetailExample example = new SigindetailExample();
+        SigindetailExample.Criteria criteria = example.createCriteria();
+        criteria.andSdUserIdEqualTo(userId);
+        criteria.andSdSiginIdEqualTo(siginId);
+        List<Sigindetail> list=sigindetailMapper.selectByExample(example);
+        if(list.isEmpty())
+            return false;
+        return true;
     }
 }

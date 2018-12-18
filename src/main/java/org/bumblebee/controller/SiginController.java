@@ -1,12 +1,15 @@
 package org.bumblebee.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import io.swagger.models.auth.In;
 import org.bumblebee.entity.Sigin;
 import org.bumblebee.entity.User;
 import org.bumblebee.service.RoomService;
 import org.bumblebee.service.SiginService;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
@@ -30,14 +33,14 @@ public class SiginController {
     public JSONObject createSigin(HttpSession session,Integer roomId){
         JSONObject object = new JSONObject();
         User user = (User) session.getAttribute("user");
-        if(roomService.judgeRoomUser(roomId,user.getUserId())){
-            Integer siginId = siginService.createSigin(user.getUserId(),roomId);
+//        if(roomService.judgeRoomUser(roomId,user.getUserId())){
+            Sigin sigin = siginService.createSigin(user.getUserId(),roomId);
             object.put("code",1);
-            object.put("siginId",siginId);
-        }else{
-            object.put("code",0);
-            object.put("message","没有权限");
-        }
+            object.put("sigin",sigin);
+//        }else{
+//            object.put("code",0);
+//            object.put("message","没有权限");
+//        }
         return object;
     }
     /*
@@ -81,7 +84,30 @@ public class SiginController {
     public  JSONObject endSigin(Integer siginId){
         JSONObject object = new JSONObject();
         siginService.endSigin(siginId);
-
+        object.put("code",1);
+        return object;
+    }
+    //签到
+    //防止使用postman进行代签,放了session
+    @RequestMapping(value = "/sigin",method = RequestMethod.GET)
+    public JSONObject sigin(HttpSession session, Integer siginId){
+        JSONObject object = new JSONObject();
+        User user = (User) session.getAttribute("user");
+        siginService.sigin(user.getUserId(),siginId);
+        object.put("code",1);
+        return object;
+    }
+    //查看是否已经签到
+    @RequestMapping(value = "/haveSigin",method = RequestMethod.GET)
+    public JSONObject haveSigin(HttpSession session,Integer siginId){
+        JSONObject object = new JSONObject();
+        User user = (User) session.getAttribute("user");
+        if(siginService.haveSigin(user.getUserId(),siginId)){//true为已经签到
+            object.put("sigin",true);
+        }else{
+            object.put("sigin",false);
+        }
+        object.put("code",1);
         return object;
     }
 }

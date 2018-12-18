@@ -1,7 +1,7 @@
 package org.bumblebee.controller;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import net.bytebuddy.dynamic.scaffold.MethodGraph;
 import org.bumblebee.WebSocket.WebSocketChat;
 import org.bumblebee.entity.Room;
 import org.bumblebee.entity.Sigin;
@@ -18,6 +18,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
 import java.util.Base64;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 
 @RestController
@@ -61,6 +62,9 @@ public class RoomController {
         room.setRoomPassword(room_insert.getRoomPassword());
         roomService.createRoom(room);
         object.put("code",1);
+        LinkedList<WebSocketChat> list = new LinkedList<>();
+        WebSocketChat.webSocketRoom.put(room.getRoomId(),list);
+        object.put("roomId",room.getRoomId());
         return object;
     }
     /*
@@ -135,7 +139,11 @@ public class RoomController {
         JSONObject object = new JSONObject();
         //返回房间总体信息，但是密码删除
         Room room = roomService.getRoomById(roomId);
-        room.setRoomPassword("");
+        //区分密码是否需要，前端用来做下一步判断
+        if(room.getRoomPassword().equals(""))
+            room.setRoomPassword("");
+        else
+            room.setRoomPassword("1");
         object.put("roomInfo",room);
         //返回房间的正在进行中投票列表
         List<Vote> voteList = voteService.getVoteAvaliableByRoomId(roomId);

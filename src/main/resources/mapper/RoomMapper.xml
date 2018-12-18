@@ -75,7 +75,7 @@
       #{roomCreateId,jdbcType=INTEGER}, #{roomCreateTime,jdbcType=TIMESTAMP}, #{roomLimit,jdbcType=INTEGER}, 
       #{roomPassword,jdbcType=VARCHAR})
   </insert>
-  <insert id="insertSelective" parameterType="org.bumblebee.entity.Room">
+  <insert id="insertSelective" parameterType="org.bumblebee.entity.Room" useGeneratedKeys="true" keyProperty="roomId">
     insert into room
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="roomId != null">

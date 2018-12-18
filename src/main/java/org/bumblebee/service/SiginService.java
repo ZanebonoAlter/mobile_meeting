@@ -9,7 +9,7 @@ public interface SiginService {
     /*
     创建签到,改mapper拿id,时间在实现类初始化
      */
-    public Integer createSigin(Integer userId,Integer roomId);
+    public Sigin createSigin(Integer userId,Integer roomId);
     /*
     签到结束
      */
@@ -26,4 +26,8 @@ public interface SiginService {
     获取往期签到总览
      */
     public List<Sigin> getSiginOverView(Integer roomId);
+    //签到
+    public Integer sigin(Integer userId,Integer siginId);
+    //根据签到id和用户id判断是否已经签到
+    public Boolean haveSigin(Integer userId,Integer siginId);
 }
